@@ -1,0 +1,89 @@
+html {
+  color: black;
+  background-color: black;
+  font-family: Arial;
+
+  /* Disable Scrolling */
+  overflow: hidden;
+}
+
+span{
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+body {
+  padding: 0;
+  margin: 0;
+  height: 100vh;
+  width: 100vw;
+}
+
+#canvas3d-container {
+  height: 70vh;
+  width: 100vw;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0);
+}
+
+#canvas2d-container {
+  width: 100vw;
+  min-height: 30vh;
+  position: relative;
+}
+
+#canvas2d,
+#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+#canvas3d {
+  width: 70vh !important;
+  background-color: rgba(0, 0, 0, 0);
+}
+
+circle {
+  fill: rgb(255, 0, 0);
+  stroke: white;
+  stroke-width: 1px;
+  r: 5px;
+}
+
+circle:hover {
+  fill: rgb(0, 0, 255);
+  cursor: hand;
+  stroke-width: 4px;
+  stroke: rgb(0, 0, 255);
+}
+
+#p4{
+  fill: white !important;
+  stroke: white !important;
+  /* stroke-dasharray: 2, 10 !important; */
+  stroke-width: 1px !important;
+  r: 3px !important;
+}
+
+line {
+  stroke: white;
+  stroke-width: 2px;
+  stroke-dasharray: 2, 10;
+}
+
+path {
+  stroke: rgb(170, 170, 170);
+  stroke-width: 2px;
+  stroke-dasharray: 2, 10;
+  fill: none;
+}

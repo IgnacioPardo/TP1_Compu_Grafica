@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>CG - TP1</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
+		integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
+		crossorigin="anonymous" defer></script>
+
+	<link href="style.css" rel="stylesheet">
+
+
+</head>
+
+<body>
+
+	<div id="canvas3d-container">
+		<canvas id="canvas3d"
+			width="1800"
+			height="1800"
+		></canvas>
+	</div>
+	<div id="canvas2d-container">
+		<canvas id="canvas2d"></canvas>
+		<svg id="overlay">
+			<path id="curve" />
+			<g id="lines">
+				<line id="line0" />
+				<line id="line1" />
+				<line id="line2" />
+			</g>
+			<circle id="p4" />
+			<circle id="p0" />
+			<circle id="p1" />
+			<circle id="p2" />
+			<circle id="p3" />
+		</svg>
+	</div>
+
+
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="main.js" type="module"></script>
+</body>
+
+</html>
