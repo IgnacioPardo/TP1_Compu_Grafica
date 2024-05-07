@@ -111,7 +111,6 @@ document.addEventListener("DOMContentLoaded", function () {
     zoom += e.deltaY * 0.01;
 
     // add <span> tag to the canvas parent element displaying the current zoom
-
     var span = document.querySelector("#zoom-span")
 
     if (span === null) {
@@ -176,8 +175,6 @@ document.addEventListener("DOMContentLoaded", function () {
       // Redraw the curve on de 2d canvas
       var event = new Event("change");
       document.getElementById("p0").dispatchEvent(event);
-
-
 
       // Display a toast notification on the canvas
       if (!document.querySelector("#reset-span")) {
