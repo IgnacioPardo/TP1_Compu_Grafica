@@ -1,9 +1,11 @@
 import { InitShaderProgram } from "./utils.js";
 import { initBuffers } from "./init-cube-buffers.js";
 import {
-  multiplyMatrices,
+  aggregatedMultiplyMatrices,
   indentityMatrix,
-  modelYRotationMatrix,
+  rotationMatrixX,
+  rotationMatrixY,
+  rotationMatrixZ,
   modelTranslationMatrix,
   getProjectionMatrix,
 } from "./matrices.js";
@@ -47,18 +49,19 @@ document.addEventListener("DOMContentLoaded", function () {
     if (span === null) {
       span = document.createElement("span");
       span.id = "rotation-span";
-      span.style.position = "absolute";
-      span.style.top = `${e.clientY}px`;
-      span.style.left = `${e.clientX}px`;
-      span.style.color = "white";
-      span.style.fontFamily = "monospace";
-      span.style.fontSize = "12px";
-      span.style.backgroundColor = "black";
-      span.style.padding = "5px";
-      span.style.borderRadius = "5px";
-      span.style.zIndex = "9999";
       canvas.parentElement.appendChild(span);
     }
+    span.style.position = "absolute";
+    console.log(e.clientY);
+    span.style.top = `calc(${e.clientY}px - 50px)`;
+    span.style.left = `${e.clientX - 75}px`;
+    span.style.color = "white";
+    span.style.fontFamily = "monospace";
+    span.style.fontSize = "12px";
+    span.style.backgroundColor = "black";
+    span.style.padding = "5px";
+    span.style.borderRadius = "5px";
+    span.style.zIndex = "9999";
 
   });
 
@@ -71,8 +74,8 @@ document.addEventListener("DOMContentLoaded", function () {
       // update the span tag with the current rotation change
       const span = document.querySelector("#rotation-span");
       span.innerText = `spaceYRotation: ${spaceYRotation.toFixed(2)}`;
-      span.style.top = `${e.clientY}px`;
-      span.style.left = `${e.clientX}px`;
+      span.style.top = `calc(${e.clientY}px - 50px)`;
+      span.style.left = `${e.clientX - 75}px`;
     }
   });
 
@@ -117,8 +120,8 @@ document.addEventListener("DOMContentLoaded", function () {
       span = document.createElement("span");
       span.id = "zoom-span";
       span.style.position = "absolute";
-      span.style.top = `${e.clientY}px`;
-      span.style.left = `${e.clientX}px`;
+      span.style.top = `calc(${e.clientY}px - 50px)`;
+      span.style.left = `${e.clientX - 50}px`;
       span.style.color = "white";
       span.style.fontFamily = "monospace";
       span.style.fontSize = "12px";
@@ -130,8 +133,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     span.innerText = `zoom: ${zoom.toFixed(2)}`;
-    span.style.top = `${e.clientY}px`;
-    span.style.left = `${e.clientX}px`;
+    span.style.top = `calc(${e.clientY}px - 50px)`;
+    span.style.left = `${e.clientX - 50}px`;
 
 
     // There is no event for scrolling stop, so we remove the span tag after 1 second of no scrolling
@@ -321,8 +324,6 @@ class CubeDrawer {
     
     let mvp = indentityMatrix();
 
-    const fieldOfView = (45 * Math.PI) / 180; // in radians
-    const aspect_ratio = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
     const zNear = 0.1;
     const zFar = 100.0;
 
@@ -337,21 +338,22 @@ class CubeDrawer {
       0, 0, 0, 1
     ];
 
-    // Perspective Projection
-    projectionMatrix = [
-      2 / (right - left), 0, 0, -(right + left) / (right - left),
-      0, 2 / (top - bottom), 0, -(top + bottom) / (top - bottom),
-      0, 0, -2 / (zFar - zNear), -(zFar + zNear) / (zFar - zNear),
-      0, 0, 0, 1
-    ];
+    // // Perspective Projection
+    // projectionMatrix = [
+    //   2 / (right - left), 0, 0, -(right + left) / (right - left),
+    //   0, 2 / (top - bottom), 0, -(top + bottom) / (top - bottom),
+    //   0, 0, -2 / (zFar - zNear), -(zFar + zNear) / (zFar - zNear),
+    //   0, 0, 0, 1
+    // ];
 
-    // projectionMatrix = getProjectionMatrix(left, right, bottom, top, zNear, zFar);
+    // Matriz de proyección ortográfica
+    projectionMatrix = getProjectionMatrix(left, right, bottom, top, zNear, zFar);
 
-    // 3d scaling matrix
+    // Factor de escala
     var scale = 2;
     scale *= cubeScale;
     
-    // Scale the cube equally in all axis
+    // Escalar el cubo en los tres ejes por igual
     const scaling = [scale, scale, scale];
     
     const scalingMatrix = [
@@ -362,17 +364,15 @@ class CubeDrawer {
     ];
 
     
-    // Evaluate Bezier Cubic Curve
+    // Puntos de control de la curva de Bezier Cubica
     let p0 = [points[0][0], points[0][1]];
     let p1 = [points[1][0], points[1][1]];
     let p2 = [points[2][0], points[2][1]];
     let p3 = [points[3][0], points[3][1]];
     
-    // Get current point in the curve based on delta
+    // Evaluar la curva de Bezier Cubica en el tiempo delta
     let currentPoint = this.evalBezierCubic(delta, p0, p1, p2, p3);
     
-    // console.log(currentPoint);
-
     // Translate to current point
     var translation = [
       0, // x
@@ -381,12 +381,14 @@ class CubeDrawer {
     ];
     
     // 3d Translation matrix
-    var translationMatrix = [
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      translation[0], translation[1], translation[2], 1
-    ];
+    // var translationMatrix = [
+    //   1, 0, 0, 0,
+    //   0, 1, 0, 0,
+    //   0, 0, 1, 0,
+    //   translation[0], translation[1], translation[2], 1
+    // ];
+
+    var translationMatrix = modelTranslationMatrix(translation);
 
     var zoomMatrix = [
       1, 0, 0, 0,
@@ -408,45 +410,11 @@ class CubeDrawer {
       cubeRotation = runTime;
     }
 
-  
-    // Functions to create rotation matrices given an angle
-    const rotationMatrixX = (rotationX) => [
-      1, 0, 0, 0,
-      0, Math.cos(rotationX), -Math.sin(rotationX), 0,
-      0, Math.sin(rotationX), Math.cos(rotationX), 0,
-      0, 0, 0, 1
-    ];
-
-    const rotationMatrixY = (rotationY) => [
-      Math.cos(rotationY), 0, Math.sin(rotationY), 0,
-      0, 1, 0, 0,
-      -Math.sin(rotationY), 0, Math.cos(rotationY), 0,
-      0, 0, 0, 1
-    ];
-
-    const rotationMatrixZ = (rotationZ) => [
-      Math.cos(rotationZ), -Math.sin(rotationZ), 0, 0,
-      Math.sin(rotationZ), Math.cos(rotationZ), 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1
-    ];
-
-    function matrixMultiply(matrices) {
-      return matrices.reduce((acc, matrix) => {
-        const result = [];
-        for (let i = 0; i < 4; i++) {
-          for (let j = 0; j < 4; j++) {
-            let sum = 0;
-            for (let k = 0; k < 4; k++) {
-              sum += acc[i * 4 + k] * matrix[k * 4 + j];
-            }
-            result.push(sum);
-          }
-        }
-        return result;
-      }, matrices[0]);
-    }
-
+    /**
+     * 
+     * @param {number[]} matrix - Matriz 4x4 a transponer
+     * @returns {number[]} Matriz transpuesta
+     */
     function transpose(matrix) {
       return [
         matrix[0], matrix[4], matrix[8], matrix[12],
@@ -456,31 +424,30 @@ class CubeDrawer {
       ];
     }
 
-    // let cubeRotationMatrixX = rotationMatrixX(rotationX);
-    // let cubeRotationMatrixY = rotationMatrixY(rotationY);
-    // let cubeRotationMatrixZ = rotationMatrixZ(rotationZ);
-    // const cubeRotationMatrix3d = matrixMultiply([cubeRotationMatrixZ, cubeRotationMatrixY, cubeRotationMatrixX]);
+    /**
+     * 
+     * @param {*} rotationX Angulo a rotar en X
+     * @param {*} rotationY Angulo a rotar en Y
+     * @param {*} rotationZ Angulo a rotar en Z
+     * @returns {number[]} Matriz de rotación compuesta
+     */
+    const composedRotationMatrix = (rotationX, rotationY, rotationZ) => aggregatedMultiplyMatrices(
+      [rotationMatrixX(rotationX), rotationMatrixY(rotationY), rotationMatrixZ(rotationZ)]
+    );
     
-    const composedRotationMatrix = (rotationX, rotationY, rotationZ) => matrixMultiply([rotationMatrixX(rotationX), rotationMatrixY(rotationY), rotationMatrixZ(rotationZ)]);
-    
+    // Rotación del cubo sobre los tres ejes
     const cubeRotationMatrix3d = composedRotationMatrix(rotationX, rotationY, rotationZ);
 
-    // var spaceRotationMatrixX = rotationMatrixX(0);
-    // var spaceRotationMatrixY = rotationMatrixY(spaceYRotation);
-    // var spaceRotationMatrixZ = rotationMatrixZ(0);
-    // const spaceRotationMatrix3d = matrixMultiply([spaceRotationMatrixX, spaceRotationMatrixY, spaceRotationMatrixZ]);
-
+    // Rotación del espacio sobre el eje Y
     const spaceRotationMatrix3d = composedRotationMatrix(0, spaceYRotation, 0);
 
-    // mvp = matrixMultiply([mvp, rotationMatrix3d]);
-    // mvp = matrixMultiply([mvp, translationMatrix]);
-    // mvp = matrixMultiply([mvp, scalingMatrix]);
-    
-    mvp = matrixMultiply([zoomMatrix, mvp]);
-    mvp = matrixMultiply([spaceRotationMatrix3d, mvp]);
-    mvp = matrixMultiply([scalingMatrix, mvp]);
-    mvp = matrixMultiply([translationMatrix, mvp]);
-    mvp = matrixMultiply([cubeRotationMatrix3d, mvp]);
+    // mvp = aggregatedMultiplyMatrices([zoomMatrix, mvp]);
+    // mvp = aggregatedMultiplyMatrices([spaceRotationMatrix3d, mvp]);
+    // mvp = aggregatedMultiplyMatrices([scalingMatrix, mvp]);
+    // mvp = aggregatedMultiplyMatrices([translationMatrix, mvp]);
+    // mvp = aggregatedMultiplyMatrices([cubeRotationMatrix3d, mvp]);
+
+    mvp = aggregatedMultiplyMatrices([cubeRotationMatrix3d, translationMatrix, scalingMatrix, spaceRotationMatrix3d, zoomMatrix, mvp]);
 
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute.
@@ -510,6 +477,16 @@ class CubeDrawer {
 
   }
 
+  /*
+   * Evaluar una curva de Bezier Cubica
+   * @param {number}
+   * @param {number[]} p0 - Punto de control 0
+   * @param {number[]} p1 - Punto de control 1
+   * @param {number[]} p2 - Punto de control 2
+   * @param {number[]} p3 - Punto de control 3
+   * @returns {number[]} - Punto en la curva de Bezier en el tiempo t
+   * 
+   */
   evalBezierCubic(t, p0, p1, p2, p3) {
     let x = Math.pow(1 - t, 3) * p0[0] + 3 * Math.pow(1 - t, 2) * t * p1[0] + 3 * (1 - t) * Math.pow(t, 2) * p2[0] + Math.pow(t, 3) * p3[0];
     let y = Math.pow(1 - t, 3) * p0[1] + 3 * Math.pow(1 - t, 2) * t * p1[1] + 3 * (1 - t) * Math.pow(t, 2) * p2[1] + Math.pow(t, 3) * p3[1];

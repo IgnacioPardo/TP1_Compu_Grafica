@@ -18,6 +18,28 @@ function multiplyMatrices(matrix1, matrix2) {
 }
 
 /**
+     * 
+     * @param {number[][]} matrices - Array de matrices 4x4 a multiplicar
+     * @returns {number[]} El resultado de multiplicar las matrices
+     * 
+     */
+function aggregatedMultiplyMatrices(matrices) {
+  return matrices.reduce((acc, matrix) => {
+    const result = [];
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 4; j++) {
+        let sum = 0;
+        for (let k = 0; k < 4; k++) {
+          sum += acc[i * 4 + k] * matrix[k * 4 + j];
+        }
+        result.push(sum);
+      }
+    }
+    return result;
+  }, matrices[0]);
+}
+
+/**
  * 
  * @returns {number[]} Una matriz identidad 4x4.
  */
@@ -33,7 +55,18 @@ function modelYRotationMatrix(angle) {
 }
 
 function modelTranslationMatrix (displacement) {
-  return indentityMatrix();
+  /**
+   * Esta función genera una matriz de traslación dado un vector;
+   * 
+   * @param {number[]} displacement - Un vector de traslación. [DisplacementX, DisplacementY, DisplacementZ]
+   * @returns {number[]} Una matriz de traslación 4x4.
+   */
+  return [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    displacement[0], displacement[1], displacement[2], 1
+  ];
 }
 
 /**
@@ -66,10 +99,60 @@ function getProjectionMatrix(left, right, bottom, top, zNear, zFar) {
   ]
 }
 
+
+/**
+ * 
+ * @param {*} rotationX Angulo a rotar en X
+ * @returns {number[]} Matriz de rotación en X
+ */
+function rotationMatrixX (rotationX) {
+  return [
+    1, 0, 0, 0,
+    0, Math.cos(rotationX), -Math.sin(rotationX), 0,
+    0, Math.sin(rotationX), Math.cos(rotationX), 0,
+    0, 0, 0, 1
+  ];
+}
+
+/**
+ * 
+ * @param {*} rotationY Angulo a rotar en Y
+ * @returns {number[]} Matriz de rotación en Y
+ * 
+ */
+function rotationMatrixY (rotationY) {
+  return [
+    Math.cos(rotationY), 0, Math.sin(rotationY), 0,
+    0, 1, 0, 0,
+    -Math.sin(rotationY), 0, Math.cos(rotationY), 0,
+    0, 0, 0, 1
+  ];
+}
+
+/**
+ * 
+ * @param {*} rotationZ Angulo a rotar en Z
+ * @returns {number[]} Matriz de rotación en Z
+ *
+*/
+function rotationMatrixZ (rotationZ) {
+  return [
+    Math.cos(rotationZ), -Math.sin(rotationZ), 0, 0,
+    Math.sin(rotationZ), Math.cos(rotationZ), 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  ];
+}
+
 export {
   multiplyMatrices,
+  aggregatedMultiplyMatrices,
   indentityMatrix,
-  modelYRotationMatrix,
+  
+  rotationMatrixX,
+  rotationMatrixY,
+  rotationMatrixZ,
+
   modelTranslationMatrix,
   getProjectionMatrix,
 };
