@@ -1,5 +1,6 @@
 import { InitShaderProgram } from "./utils.js";
 import { initBuffers } from "./init-cube-buffers.js";
+
 import {
   aggregatedMultiplyMatrices,
   indentityMatrix,
@@ -12,13 +13,10 @@ import {
 
 
 // Fixed Cube parameters
-var cubeSpeed = 0.03;
-var cubeScale = 0.4;
+var cubeScale = 0.1;
 var cubeRotation = 0.5;
 
-
 // State of the animation
-var isOscilating = true;
 var isAutoRotate = true;
 
 // Space Parameters, alter translation and rotation of the space after the cube
@@ -37,7 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
     lastX = e.clientX;
     lastY = e.clientY;
 
-    // Set cursor: grab;
+    // Set cursor to grab;
     document.body.style.cursor = "grab";
 
     // add <span> tag to the canvas parent element displaying the current rotation change
@@ -66,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   canvas.addEventListener("mousemove", (e) => {
-    
+
     if (e.buttons === 1) {
       spaceYRotation += (e.clientX - lastX) * 0.01;
       lastX = e.clientX;
@@ -187,7 +185,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (document.querySelector("#zoom-span")) {
           document.querySelector("#zoom-span").remove();
         }
-        
+
         var span = document.createElement("span");
         span.id = "reset-span";
         span.innerText = "Reset Transformations";
@@ -202,17 +200,17 @@ document.addEventListener("DOMContentLoaded", function () {
         span.style.padding = "5px";
         span.style.borderRadius = "5px";
         span.style.zIndex = "9999";
-        
+
         span.style.opacity = "0";
         canvas.parentElement.appendChild(span);
         span.style.top = "0%";
         span.style.left = `calc(50% - ${span.offsetWidth / 2}px)`;
-        
-        
+
+
         setTimeout(() => {
           span.style.transform = "translate(0, 200%)";
           span.style.opacity = "1";
-          
+
           setTimeout(() => {
             span.style.transform = "translate(0, -100%)";
             span.style.opacity = "0";
@@ -228,7 +226,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-// Clase muy similar a CurveDrawer. Pueden utilizarla como modelo para resolver el TP.
 class CubeDrawer {
   // Inicialización de los shaders y buffers
   constructor(gl) {
@@ -321,41 +318,25 @@ class CubeDrawer {
     const right = 1;
     const bottom = -1;
     const top = 1;
-    
+
     let mvp = indentityMatrix();
 
     const zNear = 0.1;
     const zFar = 100.0;
 
-    // let delta = runTime * (0.5 + cubeSpeed);
-    
-    var delta = Math.sin(runTime) * 0.5 + 0.5;
-    
-    let projectionMatrix = [
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1
-    ];
 
-    // // Perspective Projection
-    // projectionMatrix = [
-    //   2 / (right - left), 0, 0, -(right + left) / (right - left),
-    //   0, 2 / (top - bottom), 0, -(top + bottom) / (top - bottom),
-    //   0, 0, -2 / (zFar - zNear), -(zFar + zNear) / (zFar - zNear),
-    //   0, 0, 0, 1
-    // ];
+    // Oscilación del cubo
+    // sin(x) => [-1 y 1]
+    // sin(x) * 0.5 => [-0.5 y 0.5]
+    // sin(x) * 0.5 + 0.5 => [0 y 1]
+    var delta = Math.sin(runTime) * 0.5 + 0.5;
 
     // Matriz de proyección ortográfica
-    projectionMatrix = getProjectionMatrix(left, right, bottom, top, zNear, zFar);
+    let projectionMatrix = getProjectionMatrix(left, right, bottom, top, zNear, zFar);
 
-    // Factor de escala
-    var scale = 2;
-    scale *= cubeScale;
-    
     // Escalar el cubo en los tres ejes por igual
-    const scaling = [scale, scale, scale];
-    
+    const scaling = [cubeScale, cubeScale, cubeScale];
+
     const scalingMatrix = [
       scaling[0], 0, 0, 0,
       0, scaling[1], 0, 0,
@@ -363,39 +344,28 @@ class CubeDrawer {
       0, 0, 0, 1
     ];
 
-    
+
     // Puntos de control de la curva de Bezier Cubica
     let p0 = [points[0][0], points[0][1]];
     let p1 = [points[1][0], points[1][1]];
     let p2 = [points[2][0], points[2][1]];
     let p3 = [points[3][0], points[3][1]];
-    
+
     // Evaluar la curva de Bezier Cubica en el tiempo delta
     let currentPoint = this.evalBezierCubic(delta, p0, p1, p2, p3);
-    
+
     // Translate to current point
     var translation = [
       0, // x
-      -currentPoint[0] * 10 + 5, // y
+      -currentPoint[0] * 20 + 10, // y
       currentPoint[1] * 10 - 10, // z
     ];
-    
-    // 3d Translation matrix
-    // var translationMatrix = [
-    //   1, 0, 0, 0,
-    //   0, 1, 0, 0,
-    //   0, 0, 1, 0,
-    //   translation[0], translation[1], translation[2], 1
-    // ];
 
+    // Translation matrix a partir de las traslaciones en x, y, z
     var translationMatrix = modelTranslationMatrix(translation);
 
-    var zoomMatrix = [
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, zoom, 1
-    ];
+    // Zoom matrix a partir del zoom
+    var zoomMatrix = modelTranslationMatrix([0, 0, zoom]);
 
     // Rotate by delta
     let rotationX = 0;
@@ -426,6 +396,8 @@ class CubeDrawer {
 
     /**
      * 
+     * La matriz de rotación compuesta es el resultado de multiplicar las matrices de rotación en X, Y y Z
+     * 
      * @param {*} rotationX Angulo a rotar en X
      * @param {*} rotationY Angulo a rotar en Y
      * @param {*} rotationZ Angulo a rotar en Z
@@ -434,20 +406,22 @@ class CubeDrawer {
     const composedRotationMatrix = (rotationX, rotationY, rotationZ) => aggregatedMultiplyMatrices(
       [rotationMatrixX(rotationX), rotationMatrixY(rotationY), rotationMatrixZ(rotationZ)]
     );
-    
+
     // Rotación del cubo sobre los tres ejes
     const cubeRotationMatrix3d = composedRotationMatrix(rotationX, rotationY, rotationZ);
 
     // Rotación del espacio sobre el eje Y
     const spaceRotationMatrix3d = composedRotationMatrix(0, spaceYRotation, 0);
 
-    // mvp = aggregatedMultiplyMatrices([zoomMatrix, mvp]);
-    // mvp = aggregatedMultiplyMatrices([spaceRotationMatrix3d, mvp]);
-    // mvp = aggregatedMultiplyMatrices([scalingMatrix, mvp]);
-    // mvp = aggregatedMultiplyMatrices([translationMatrix, mvp]);
-    // mvp = aggregatedMultiplyMatrices([cubeRotationMatrix3d, mvp]);
-
     mvp = aggregatedMultiplyMatrices([cubeRotationMatrix3d, translationMatrix, scalingMatrix, spaceRotationMatrix3d, zoomMatrix, mvp]);
+    /* 
+    La Linea de arriba es equivalente a aplicar en orden las siguientes transformaciones:
+      mvp = aggregatedMultiplyMatrices([zoomMatrix, mvp]);
+      mvp = aggregatedMultiplyMatrices([spaceRotationMatrix3d, mvp]);
+      mvp = aggregatedMultiplyMatrices([scalingMatrix, mvp]);
+      mvp = aggregatedMultiplyMatrices([translationMatrix, mvp]);
+      mvp = aggregatedMultiplyMatrices([cubeRotationMatrix3d, mvp]);
+    */
 
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute.
@@ -461,7 +435,7 @@ class CubeDrawer {
     this.gl.useProgram(this.programInfo.program);
 
     this.gl.uniformMatrix4fv(this.programInfo.uniformLocations.mvp, false, mvp);
-    
+
     // Set the shader uniforms
     this.gl.uniformMatrix4fv(
       this.programInfo.uniformLocations.projectionMatrix,
@@ -504,7 +478,22 @@ var vsSource = /*glsl*/ `
 
     void main(void) {
         gl_Position = uProjectionMatrix * umvp * aVertexPosition;
-        vColor = aVertexColor;
+        // vColor = aVertexColor;
+        
+        // Recolor the cube based on the position of the vertex
+        // vColor = vec4(aVertexPosition.x, aVertexPosition.y, aVertexPosition.z, 1.0);
+
+        // Recolor the cube based on the position of the vertex and the aVertexColor
+        // Clamp aVertexPosition to the range 0.2 to 0.8
+        float lowerBound = 0.4;
+        float upperBound = 1.0;
+        vColor = vec4(
+          clamp(aVertexColor.r * aVertexPosition.x, lowerBound, upperBound), 
+          clamp(aVertexColor.g * aVertexPosition.y, lowerBound, upperBound), 
+          clamp(aVertexColor.b * aVertexPosition.z, lowerBound, upperBound), 
+          1.0
+        );  
+
     }
 `;
 
@@ -514,6 +503,28 @@ var fsSource = /*glsl*/ `
 
     void main(void) {
         gl_FragColor = vColor;
+
+        // Add lighting effect
+        // vec3 lightDirection = normalize(vec3(0.5, 0.2, 1.0));
+        // float lightWeight = max(dot(normalize(vColor.rgb), lightDirection), 0.0);
+        // gl_FragColor = vec4(vColor.rgb * lightWeight, vColor.a);
+
+        // Phong shading
+        // vec3 lightDirection = normalize(vec3(0.5, 0.2, 1.0));
+        // float lightWeight = max(dot(normalize(vColor.rgb), lightDirection), 0.0);
+        // vec3 ambient = vec3(0.1, 0.1, 0.1);
+        // vec3 diffuse = vec3(1.0, 1.0, 1.0);
+        // vec3 specular = vec3(1.0, 1.0, 1.0);
+        // float shininess = 2000.0;
+        // vec3 normal = normalize(vColor.rgb);
+        // vec3 viewDir = normalize(-vColor.rgb);
+        // vec3 reflectDir = reflect(-lightDirection, normal);
+        // float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+        // vec3 specularLight = specular * spec;
+        // vec3 diffuseLight = diffuse * lightWeight;
+        // vec3 ambientLight = ambient;
+        // vec3 result = (ambientLight + diffuseLight + specularLight) * vColor.rgb;
+        // gl_FragColor = vec4(result, vColor.a);
     }
 `;
 

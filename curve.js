@@ -1,52 +1,48 @@
 import { InitShaderProgram } from "./utils.js";
 
-// Completar la implementación de esta clase y el correspondiente vertex shader.
-// No es necesario modificar el fragment shader a menos que quieran, por ejemplo, modificar el color de la curva.
-
 class CurveDrawer {
-  // Inicialización de los shaders y buffers
-  constructor(gl) {
-    // Creamos el programa webgl con los shaders para los segmentos de recta
-    this.gl = gl;
-    this.prog = InitShaderProgram(curvesVS, curvesFS, this.gl);
+	// Inicialización de los shaders y buffers
+	constructor(gl) {
+		// Creamos el programa webgl con los shaders para los segmentos de recta
+		this.gl = gl;
+		this.prog = InitShaderProgram(curvesVS, curvesFS, this.gl);
 
-    // [Completar] Incialización y obtención de las ubicaciones de los atributos y variables uniformes
+		// [Completar] Incialización y obtención de las ubicaciones de los atributos y variables uniformes
 
-	this.mvp = gl.getUniformLocation(this.prog, "mvp");
-	
-	this.t = gl.getAttribLocation(this.prog, "t");
+		this.mvp = gl.getUniformLocation(this.prog, "mvp");
 
-	this.p0 = gl.getUniformLocation(this.prog, "p0");
-	this.p1 = gl.getUniformLocation(this.prog, "p1");
-	this.p2 = gl.getUniformLocation(this.prog, "p2");
-	this.p3 = gl.getUniformLocation(this.prog, "p3");
+		this.t = gl.getAttribLocation(this.prog, "t");
 
-	// [Completar] Creacion del vertex buffer y seteo de contenido
-	
-	this.buffer = gl.createBuffer();
+		this.p0 = gl.getUniformLocation(this.prog, "p0");
+		this.p1 = gl.getUniformLocation(this.prog, "p1");
+		this.p2 = gl.getUniformLocation(this.prog, "p2");
+		this.p3 = gl.getUniformLocation(this.prog, "p3");
 
-	this.steps = 100;
-	var t = [];
-	for (var i = 0; i < this.steps; ++i) {
-		t.push(i / this.steps);	
+		// [Completar] Creacion del vertex buffer y seteo de contenido
+
+		this.buffer = gl.createBuffer();
+
+		this.steps = 100;
+		var t = [];
+		for (var i = 0; i < this.steps; ++i) {
+			t.push(i / this.steps);
+		}
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(t), gl.STATIC_DRAW);
+
 	}
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(t), gl.STATIC_DRAW);
-
-  }
-
 	// Actualización del viewport (se llama al inicializar la web o al cambiar el tamaño de la pantalla)
-	setViewport( width, height )
-	{
+	setViewport(width, height) {
 		// [Completar] Matriz de transformación.
 		// [Completar] Binding del programa y seteo de la variable uniforme para la matriz. 
 
 		var trans = [
-			2/width,0,0,0,
-			0,-2/height,0,0,
-			0,0,1,0,
-			-1,1,0,1
+			2 / width, 0, 0, 0,
+			0, -2 / height, 0, 0,
+			0, 0, 1, 0,
+			-1, 1, 0, 1
 		];
 		//var trans = [ 2/5000,0,0,0,  0,-2/5000,0,0, 0,0,1,0, -1,1,0,1 ];
 
@@ -55,8 +51,7 @@ class CurveDrawer {
 		this.gl.uniformMatrix4fv(this.mvp, false, trans);
 	}
 
-	updatePoints( pt )
-	{
+	updatePoints(pt) {
 		// [Completar] Actualización de las variables uniformes para los puntos de control
 		// [Completar] No se olviden de hacer el binding del programa antes de setear las variables 
 		// [Completar] Pueden acceder a las coordenadas de los puntos de control consultando el arreglo pt[]:
@@ -83,11 +78,10 @@ class CurveDrawer {
 		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
 	}
 
-	draw()
-	{
+	draw() {
 		// [Completar] Dibujamos la curva como una LINE_STRIP
 		// [Completar] No se olviden de hacer el binding del programa y de habilitar los atributos de los vértices
-	
+
 		// Seleccionamos el shader
 		this.gl.useProgram(this.prog);
 
@@ -104,10 +98,6 @@ class CurveDrawer {
 }
 
 // Vertex Shader
-//[Completar] El vertex shader se ejecuta una vez por cada punto en mi curva (parámetro step). No confundir punto con punto de control.
-// Deberán completar con la definición de una Bezier Cúbica para un punto t. Algunas consideraciones generales respecto a GLSL: si
-// declarás las variables pero no las usás, no se les asigna espacio. Siempre poner ; al finalizar las sentencias. Las constantes
-// en punto flotante necesitan ser expresadas como X.Y, incluso si son enteros: ejemplo, para 4 escribimos 4.0
 var curvesVS = /*glsl*/ `
 
 	uniform mat4 mvp;
@@ -118,13 +108,28 @@ var curvesVS = /*glsl*/ `
 	uniform vec2 p1;
 	uniform vec2 p2;
 	uniform vec2 p3;
-
 	vec2 evalBezierCubic(float t, vec2 p0, vec2 p1, vec2 p2, vec2 p3)
 	{
+		/*
+		Esta función evalúa una curva de Bezier cúbica en el punto t.
+		
+		Parámetros:
+			t -- Parámetro de la curva de Bezier cúbica.
+			p0 -- Punto de control 0.
+			p1 -- Punto de control 1.
+			p2 -- Punto de control 2.
+			p3 -- Punto de control 3.
+
+		Retorna:
+			vec2 -- Punto sobre la curva de Bezier cúbica en el punto t.
+		*/
+
+		// Calcula x e y por separado
 		// float x = pow(1.0 - t, 3.0) * p0[0] + 3.0 * pow(1.0 - t, 2.0) * t * p1[0] + 3.0 * (1.0 - t) * pow(t, 2.0) * p2[0] + pow(t, 3.0) * p3[0];
 		// float y = pow(1.0 - t, 3.0) * p0[1] + 3.0 * pow(1.0 - t, 2.0) * t * p1[1] + 3.0 * (1.0 - t) * pow(t, 2.0) * p2[1] + pow(t, 3.0) * p3[1];
 		// return vec2(x, y);
 
+		// Forma más compacta, se hacen las operaciones component-wise 
 		return pow(1.0 - t, 3.0) * p0 + 3.0 * pow(1.0 - t, 2.0) * t * p1 + 3.0 * (1.0 - t) * pow(t, 2.0) * p2 + pow(t, 3.0) * p3;
 	}
 

@@ -21,6 +21,14 @@ body {
   margin: 0;
   height: 100vh;
   width: 100vw;
+  text-align: center;
+  background-color: #000;
+  color: #f0f0f0;
+  background-image: url('https://t3.ftcdn.net/jpg/05/78/13/66/360_F_578136654_tqYbJtgHfCck2IKJv5zVy2aUwoV17aJO.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
 }
 
 #canvas3d-container {
@@ -37,6 +45,11 @@ body {
   width: 100vw;
   min-height: 30vh;
   position: relative;
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+
+  border-radius: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 #canvas2d,
@@ -49,7 +62,7 @@ body {
 }
 
 #canvas3d {
-  width: 70vh !important;
+  width: 150vh !important;
   background-color: rgba(0, 0, 0, 0);
 }
 

@@ -8,11 +8,11 @@
 function multiplyMatrices(matrix1, matrix2) {
   let result = new Array(16).fill(0);
   for (let i = 0; i < 4; i++) {
-      for (let j = 0; j < 4; j++) {
-          for (let k = 0; k < 4; k++) {
-              result[j * 4 + i] += matrix1[k * 4 + i] * matrix2[j * 4 + k];
-          }
+    for (let j = 0; j < 4; j++) {
+      for (let k = 0; k < 4; k++) {
+        result[j * 4 + i] += matrix1[k * 4 + i] * matrix2[j * 4 + k];
       }
+    }
   }
   return result;
 }
@@ -45,16 +45,12 @@ function aggregatedMultiplyMatrices(matrices) {
  */
 function indentityMatrix() {
   return [1, 0, 0, 0,
-          0, 1, 0, 0,
-          0, 0, 1, 0,
-          0, 0, 0, 1];
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1];
 }
 
-function modelYRotationMatrix(angle) {
-  return indentityMatrix();
-}
-
-function modelTranslationMatrix (displacement) {
+function modelTranslationMatrix(displacement) {
   /**
    * Esta función genera una matriz de traslación dado un vector;
    * 
@@ -83,12 +79,14 @@ function modelTranslationMatrix (displacement) {
 function getProjectionMatrix(left, right, bottom, top, zNear, zFar) {
   /*
   La matriz de proyección ortográfica funciona de la siguiente manera:
-  2 / (right - left) -> Escala en X
-  2 / (top - bottom) -> Escala en Y
-  -2 / (zFar - zNear) -> Escala en Z
-  -(right + left) / (right - left) -> Traslación en X
-  -(top + bottom) / (top - bottom) -> Traslación en Y
-  -(zFar + zNear) / (zFar - zNear) -> Traslación en Z
+
+    2 / (right - left) -> Escala en X
+    2 / (top - bottom) -> Escala en Y
+    -2 / (zFar - zNear) -> Escala en Z
+
+    -(right + left) / (right - left) -> Traslación en X
+    -(top + bottom) / (top - bottom) -> Traslación en Y
+    -(zFar + zNear) / (zFar - zNear) -> Traslación en Z
   */
 
   return [
@@ -105,7 +103,7 @@ function getProjectionMatrix(left, right, bottom, top, zNear, zFar) {
  * @param {*} rotationX Angulo a rotar en X
  * @returns {number[]} Matriz de rotación en X
  */
-function rotationMatrixX (rotationX) {
+function rotationMatrixX(rotationX) {
   return [
     1, 0, 0, 0,
     0, Math.cos(rotationX), -Math.sin(rotationX), 0,
@@ -120,7 +118,7 @@ function rotationMatrixX (rotationX) {
  * @returns {number[]} Matriz de rotación en Y
  * 
  */
-function rotationMatrixY (rotationY) {
+function rotationMatrixY(rotationY) {
   return [
     Math.cos(rotationY), 0, Math.sin(rotationY), 0,
     0, 1, 0, 0,
@@ -135,7 +133,7 @@ function rotationMatrixY (rotationY) {
  * @returns {number[]} Matriz de rotación en Z
  *
 */
-function rotationMatrixZ (rotationZ) {
+function rotationMatrixZ(rotationZ) {
   return [
     Math.cos(rotationZ), -Math.sin(rotationZ), 0, 0,
     Math.sin(rotationZ), Math.cos(rotationZ), 0, 0,
@@ -148,7 +146,7 @@ export {
   multiplyMatrices,
   aggregatedMultiplyMatrices,
   indentityMatrix,
-  
+
   rotationMatrixX,
   rotationMatrixY,
   rotationMatrixZ,

@@ -1,63 +1,46 @@
 import { InitShaderProgram } from "./utils.js";
 
-// Completar la implementación de esta clase y el correspondiente vertex shader.
-// No es necesario modificar el fragment shader a menos que quieran, por ejemplo, modificar el color de la curva.
-
+// Alternativa a curve.js
+// Dibuja la curva de bezier discretizando la curva en segmentos en CPU
+// Luego se envían los segmentos a la GPU para su renderizado
 class CurveDrawer {
-  // Inicialización de los shaders y buffers
-  constructor(gl) {
-    // Creamos el programa webgl con los shaders para los segmentos de recta
-    this.gl = gl;
-    this.prog = InitShaderProgram(curvesVS, curvesFS, this.gl);
+	// Inicialización de los shaders y buffers
+	constructor(gl) {
+		// Creamos el programa webgl con los shaders para los segmentos de recta
+		this.gl = gl;
+		this.prog = InitShaderProgram(curvesVS, curvesFS, this.gl);
 
-    // [Completar] Incialización y obtención de las ubicaciones de los atributos y variables uniformes
+		// Obtenemos la ubicación de las varibles uniformes en los shaders,
+		// en este caso, la matriz de transformación 'mvp'
+		this.mvp = gl.getUniformLocation(this.prog, "mvp");
 
-	  // Obtenemos la ubicación de las varibles uniformes en los shaders,
-	  // en este caso, la matriz de transformación 'mvp'
-	  this.mvp = gl.getUniformLocation(this.prog, "mvp");
+		// Obtenemos la ubicación de los atributos de los vértices
+		// en este caso, la posición 'pos'
+		this.vertPos = gl.getAttribLocation(this.prog, "pos");
 
-	  // Obtenemos la ubicación de los atributos de los vértices
-	  // en este caso, la posición 'pos'
-	  this.vertPos = gl.getAttribLocation(this.prog, "pos");
+		// Creamos el buffer para los vértices.
+		// En este caso no tenemos triángulos, pero si segmentos
+		// definidos entre dos puntos.
+		this.buffer = gl.createBuffer();
 
-	  // Creamos el buffer para los vértices.
-	  // En este caso no tenemos triángulos, pero si segmentos
-	  // definidos entre dos puntos.
-	  this.buffer = gl.createBuffer();
+		// Si bien creamos el buffer, no vamos a ponerle contenido en este
+		// constructor. La actualziación de la información de los vértices
+		// la haremos dentro de updatePoints().
 
-	  // Si bien creamos el buffer, no vamos a ponerle contenido en este
-	  // constructor. La actualziación de la información de los vértices
-	  // la haremos dentro de updatePoints().
-
-  }
+	}
 
 	// Actualización del viewport (se llama al inicializar la web o al cambiar el tamaño de la pantalla)
-	setViewport( width, height )
-	{
-		// [Completar] Matriz de transformación.
-		// [Completar] Binding del programa y seteo de la variable uniforme para la matriz. 
+	setViewport(width, height) {
 		// Calculamos la matriz de proyección.
 		// Como nos vamos a manejar únicamente en 2D, no tiene sentido utilizar perspectiva.
 		// Simplemente inicializamos la matriz para que escale los elementos de la escena
 		// al ancho y alto del canvas, invirtiendo la coordeanda y. La matriz está en formato
 		// column-major.
 		var trans = [
-			2 / width,
-			0,
-			0,
-			0,
-			0,
-			-2 / height,
-			0,
-			0,
-			0,
-			0,
-			1,
-			0,
-			-1,
-			1,
-			0,
-			1,
+			2 / width, 0, 0, 0, 
+			0, -2 / height, 0, 0, 
+			0, 0, 1, 0,
+			-1, 1, 0, 1,
 		];
 		//var trans = [ 2/5000,0,0,0,  0,-2/5000,0,0, 0,0,1,0, -1,1,0,1 ];
 
@@ -67,13 +50,7 @@ class CurveDrawer {
 
 	}
 
-	updatePoints( pt )
-	{
-		// [Completar] Actualización de las variables uniformes para los puntos de control
-		// [Completar] No se olviden de hacer el binding del programa antes de setear las variables 
-		// [Completar] Pueden acceder a las coordenadas de los puntos de control consultando el arreglo pt[]:
-		// var x = pt[i].getAttribute("cx");
-		// var y = pt[i].getAttribute("cy");
+	updatePoints(pt) {
 
 		// Armamos el arreglo
 		var p = [];
@@ -96,8 +73,6 @@ class CurveDrawer {
 			curve.push(y);
 		}
 
-
-
 		// Enviamos al buffer
 		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
 		this.gl.bufferData(
@@ -108,11 +83,7 @@ class CurveDrawer {
 
 	}
 
-	draw()
-	{
-		// [Completar] Dibujamos la curva como una LINE_STRIP
-		// [Completar] No se olviden de hacer el binding del programa y de habilitar los atributos de los vértices
-	
+	draw() {
 		// Seleccionamos el shader
 		this.gl.useProgram(this.prog);
 
@@ -129,10 +100,6 @@ class CurveDrawer {
 }
 
 // Vertex Shader
-//[Completar] El vertex shader se ejecuta una vez por cada punto en mi curva (parámetro step). No confundir punto con punto de control.
-// Deberán completar con la definición de una Bezier Cúbica para un punto t. Algunas consideraciones generales respecto a GLSL: si
-// declarás las variables pero no las usás, no se les asigna espacio. Siempre poner ; al finalizar las sentencias. Las constantes
-// en punto flotante necesitan ser expresadas como X.Y, incluso si son enteros: ejemplo, para 4 escribimos 4.0
 var curvesVS = `
 	attribute vec2 pos;
 	uniform mat4 mvp;
